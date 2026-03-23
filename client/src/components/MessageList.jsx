@@ -1,4 +1,5 @@
 import CodeBlock from "./CodeBlock.jsx";
+import ColorSwatchRenderer from "./ColorSwatchRenderer.jsx";
 import SourceBadge from "./SourceBadge.jsx";
 import ToolIndicator from "./ToolIndicator.jsx";
 
@@ -8,6 +9,7 @@ function MessageItem({ message }) {
       <div className="message__bubble">
         {message.text ? <p>{message.text}</p> : null}
         {message.codeSnippet ? <CodeBlock snippet={message.codeSnippet} /> : null}
+        {message.palette ? <ColorSwatchRenderer palette={message.palette} /> : null}
       </div>
       <ToolIndicator tools={message.toolsUsed} />
       {message.sources?.length ? (

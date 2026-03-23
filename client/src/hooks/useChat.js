@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { parseSources, stripSources, tryParseCssSnippet } from "../lib/responseParser.js";
+import { parseSources, stripSources, tryParseColorPalette, tryParseCssSnippet } from "../lib/responseParser.js";
 import { streamMessage } from "./useStream.js";
 
 function createSessionId() {
@@ -9,15 +9,18 @@ function createSessionId() {
 function mapAgentResponse(payload) {
   const content = payload?.response || "";
   const cssSnippet = tryParseCssSnippet(content);
-  const sources = cssSnippet ? [] : parseSources(content);
+  const palette = cssSnippet ? null : tryParseColorPalette(content);
+  const sources = cssSnippet || palette ? [] : parseSources(content);
+  const text = cssSnippet || palette ? "" : stripSources(content);
 
   return {
     id: crypto.randomUUID(),
     role: "assistant",
-    text: cssSnippet ? "" : stripSources(content),
+    text,
     toolsUsed: Array.isArray(payload?.toolsUsed) ? payload.toolsUsed : [],
     sources,
     codeSnippet: cssSnippet,
+    palette,
   };
 }
 
@@ -29,6 +32,7 @@ function createAssistantPlaceholder() {
     toolsUsed: [],
     sources: [],
     codeSnippet: null,
+    palette: null,
   };
 }
 
@@ -49,6 +53,7 @@ export function useChat() {
       toolsUsed: [],
       sources: [],
       codeSnippet: null,
+      palette: null,
     };
 
     setMessages((prev) => [...prev, userMessage]);

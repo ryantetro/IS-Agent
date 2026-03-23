@@ -45,6 +45,18 @@
 - Added structured logs for stream start, chunk emission, completion, and stream errors
 - Added streaming verification script `scripts/verify-phase7.js` and integrated it into root test workflow
 - Verification evidence: `npm run test --prefix server`, `npm run test --prefix client`, `node scripts/verify-phase7.js`, and `npm run test` all pass
+- Implemented Phase 8 artifact rendering path for color palettes and CSS previews in the chat UI
+- Added palette artifact detection (`type: color_palette`) with inline swatch rendering via `ColorSwatchRenderer`
+- Added CSS live preview panel via `CSSPreviewPanel` and integrated preview toggle into code block rendering
+- Updated chat parsing/rendering flow to support normal text, sources, code snippets, swatches, and live CSS previews
+- Added parser coverage for palette artifact shape and phase verification script `scripts/verify-phase8.js`
+- Verification evidence: `npm run test --prefix client`, `node scripts/verify-phase8.js`, and `npm run test` all pass
+- Completed Phase 9 submission polish for repository readiness (excluding demo video recording)
+- Expanded README with assignment requirement mapping, setup, run, API, and verification instructions
+- Added tracked roadmap mirror `aiDocs/roadmap.md` so progress is visible in committed repo content
+- Updated context references to tracked roadmap path for reviewer/AI orientation
+- Added final repo requirement verification script `scripts/verify-phase9.js` and integrated it into root test workflow
+- Verification evidence: `node scripts/verify-phase9.js` and `npm run test` pass
 
 ## Format
 For future entries include:

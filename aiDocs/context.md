@@ -8,7 +8,7 @@ DesignMind is a multi-tool AI agent built with LangChain.js that acts as a profe
 - `aiDocs/architecture.md`
 - `aiDocs/coding-style.md`
 - `aiDocs/changelog.md`
-- `ai/roadmaps/master-roadmap.md`
+- `aiDocs/roadmap.md`
 
 ## Tech Stack
 - Frontend: React + Vite

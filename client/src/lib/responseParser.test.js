@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseSources, stripSources, tryParseCssSnippet } from "./responseParser.js";
+import { parseSources, stripSources, tryParseColorPalette, tryParseCssSnippet } from "./responseParser.js";
 
 test("tryParseCssSnippet parses css snippet payload", () => {
   const payload = JSON.stringify({
@@ -23,4 +23,19 @@ test("parseSources extracts listed sources from response body", () => {
 test("stripSources removes source section from content", () => {
   const content = "Main answer\n\nSources:\n- Source 1";
   assert.equal(stripSources(content), "Main answer");
+});
+
+test("tryParseColorPalette parses palette artifact payload", () => {
+  const payload = JSON.stringify({
+    type: "color_palette",
+    title: "Fintech Palette",
+    colors: [
+      { label: "Primary", hex: "#1E3A5F" },
+      { label: "Surface", hex: "#F8FAFC" },
+    ],
+  });
+  const parsed = tryParseColorPalette(payload);
+  assert.equal(parsed.type, "color_palette");
+  assert.equal(parsed.colors.length, 2);
+  assert.equal(parsed.colors[0].label, "Primary");
 });

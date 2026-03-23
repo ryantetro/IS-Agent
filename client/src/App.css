@@ -239,11 +239,76 @@
   padding: 0.15rem 0.55rem;
 }
 
+.code-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 .code-block__explain {
   margin: 0;
   padding: 0.55rem 0.75rem 0.75rem;
   color: #4b4d5d;
   font-size: 0.84rem;
+}
+
+.css-preview {
+  border-top: 1px solid #ececf2;
+  padding: 0.6rem 0.7rem 0.8rem;
+  background: #fbfbfd;
+}
+
+.css-preview iframe {
+  width: 100%;
+  min-height: 170px;
+  border: 1px solid #dde0e8;
+  border-radius: 12px;
+  background: white;
+}
+
+.palette-card {
+  border: 1px solid #e3e4eb;
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: #fbfcff;
+}
+
+.palette-card h4 {
+  margin: 0 0 0.55rem;
+  font-size: 0.85rem;
+  color: #33384d;
+}
+
+.palette-grid {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.palette-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.palette-chip {
+  width: 44px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.palette-meta {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.palette-meta strong {
+  font-size: 0.78rem;
+}
+
+.palette-meta span {
+  color: #596079;
+  font-size: 0.75rem;
 }
 
 .error-banner {
