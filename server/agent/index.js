@@ -4,6 +4,7 @@ import { executeCalculatorTool, createCalculatorLangChainTool } from "./tools/ca
 import { executeWebSearchTool, createWebSearchLangChainTool } from "./tools/webSearch.js";
 import { executeRagSearchTool, createRagLangChainTool } from "./tools/ragSearch.js";
 import { executeCssSnippetTool, createCssSnippetLangChainTool } from "./tools/cssSnippet.js";
+import { appendSessionTurn, getMemoryContext } from "./memory.js";
 
 let cachedExecutor = null;
 
@@ -16,12 +17,34 @@ function looksLikeRagQuery(message) {
 }
 
 function looksLikeCssRequest(message) {
-  return /(tailwind|css|class(es)?|styles?|hover|button|card|layout|snippet)/i.test(message);
+  return /(tailwind|css|class(es)?|styles?|hover|button|card|layout|snippet|palette)/i.test(message);
 }
 
-async function runDeterministicFallback({ message, sessionId, webSearchFn, cssSnippetFn }) {
+function enrichWithMemory({ message, memoryContext }) {
+  if (!memoryContext) {
+    return message;
+  }
+  const isFollowUp = /(same|darker|lighter|that|previous|follow-up|use it|use the same)/i.test(message);
+  if (!isFollowUp) {
+    return message;
+  }
+  return `${message}\n\nContext from memory:\n${memoryContext}`;
+}
+
+async function runDeterministicFallback({
+  message,
+  sessionId,
+  webSearchFn,
+  cssSnippetFn,
+  memoryContext,
+}) {
+  const workingMessage = enrichWithMemory({ message, memoryContext });
+  const isFollowUp = /(same|darker|lighter|that|previous|follow-up|use it|use the same)/i.test(message);
+  const memoryHasCssContext = /"mode":"tailwind"|"mode":"css"|bg-[a-z]+-\d+|border-[a-z]+-\d+/i.test(
+    memoryContext || ""
+  );
   if (looksLikeMath(message)) {
-    const expression = message.replace(/[^0-9+\-*/(). ]/g, "").trim() || message;
+    const expression = workingMessage.replace(/[^0-9+\-*/(). ]/g, "").trim() || workingMessage;
     const result = await executeCalculatorTool({ input: expression, sessionId });
     return {
       sessionId,
@@ -32,7 +55,7 @@ async function runDeterministicFallback({ message, sessionId, webSearchFn, cssSn
   }
 
   if (looksLikeRagQuery(message)) {
-    const ragResult = await executeRagSearchTool({ input: message, sessionId });
+    const ragResult = await executeRagSearchTool({ input: workingMessage, sessionId });
     return {
       sessionId,
       route: "rag_search",
@@ -41,10 +64,10 @@ async function runDeterministicFallback({ message, sessionId, webSearchFn, cssSn
     };
   }
 
-  if (looksLikeCssRequest(message)) {
-    const mode = /tailwind/i.test(message) ? "tailwind" : "css";
+  if (looksLikeCssRequest(message) || (isFollowUp && memoryHasCssContext)) {
+    const mode = /tailwind/i.test(workingMessage) ? "tailwind" : "css";
     const cssResult = await executeCssSnippetTool({
-      input: { description: message, mode },
+      input: { description: workingMessage, mode },
       sessionId,
       llmGenerate: cssSnippetFn,
     });
@@ -57,7 +80,7 @@ async function runDeterministicFallback({ message, sessionId, webSearchFn, cssSn
   }
 
   const webResult = await executeWebSearchTool({
-    input: message,
+    input: workingMessage,
     sessionId,
     webSearchFn,
   });
@@ -99,26 +122,39 @@ Keep final answers concise and preserve structured tool outputs.`;
 }
 
 export async function runAgent({ message, sessionId = "default", webSearchFn, cssSnippetFn }) {
+  const safeSessionId = sessionId || `session-${Date.now()}`;
   const startedAt = Date.now();
-  logger.info("agent_request_start", { sessionId, userMessage: message });
+  logger.info("agent_request_start", { sessionId: safeSessionId, userMessage: message });
 
   try {
+    appendSessionTurn(safeSessionId, { role: "user", content: message });
+    const memoryContext = getMemoryContext(safeSessionId);
+
     let result;
     if (!process.env.OPENAI_API_KEY) {
-      result = await runDeterministicFallback({ message, sessionId, webSearchFn, cssSnippetFn });
+      result = await runDeterministicFallback({
+        message,
+        sessionId: safeSessionId,
+        webSearchFn,
+        cssSnippetFn,
+        memoryContext,
+      });
     } else {
-      const executor = await getAgentExecutor({ sessionId, webSearchFn });
-      const response = await executor.invoke({ input: message });
+      const executor = await getAgentExecutor({ sessionId: safeSessionId, webSearchFn });
+      const response = await executor.invoke({
+        input: enrichWithMemory({ message, memoryContext }),
+      });
       result = {
-        sessionId,
+        sessionId: safeSessionId,
         route: "react_agent",
         toolsUsed: ["calculator", "web_search", "rag_search", "css_snippet"],
         response: typeof response.output === "string" ? response.output : JSON.stringify(response.output),
       };
     }
+    appendSessionTurn(safeSessionId, { role: "assistant", content: result.response });
 
     logger.info("agent_request_end", {
-      sessionId,
+      sessionId: safeSessionId,
       route: result.route,
       toolsUsed: result.toolsUsed,
       durationMs: Date.now() - startedAt,
@@ -126,7 +162,7 @@ export async function runAgent({ message, sessionId = "default", webSearchFn, cs
     return result;
   } catch (error) {
     logger.error("agent_request_error", {
-      sessionId,
+      sessionId: safeSessionId,
       userMessage: message,
       error: error instanceof Error ? error.message : String(error),
       durationMs: Date.now() - startedAt,

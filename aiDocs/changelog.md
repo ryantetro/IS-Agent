@@ -26,6 +26,12 @@
 - Added tests and CLI validation for CSS/Tailwind generation paths
 - Added `scripts/verify-phase4.js` and integrated it into root test workflow
 - Verification evidence: `npm run test --prefix server`, `node scripts/verify-phase4.js`, and `npm run test` all pass
+- Implemented Phase 5 session-scoped conversation memory in `server/agent/memory.js`
+- Added structured memory lifecycle logs for session creation/reuse and memory read/write operations
+- Wired memory context into agent execution to support follow-up prompts that depend on prior turns
+- Added multi-turn validation for same-session follow-up behavior and session memory unit coverage
+- Added `scripts/verify-phase5.js` and integrated it into root test workflow
+- Verification evidence: `npm run test --prefix server`, `node scripts/verify-phase5.js`, and `npm run test` all pass
 
 ## Format
 For future entries include:
