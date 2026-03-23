@@ -2,11 +2,16 @@ import { ChatOpenAI } from "@langchain/openai";
 import { logger } from "../logger.js";
 import { executeCalculatorTool, createCalculatorLangChainTool } from "./tools/calculator.js";
 import { executeWebSearchTool, createWebSearchLangChainTool } from "./tools/webSearch.js";
+import { executeRagSearchTool, createRagLangChainTool } from "./tools/ragSearch.js";
 
 let cachedExecutor = null;
 
 function looksLikeMath(message) {
   return /(\d+\s*[\+\-\*\/]\s*\d+)|calculate|what is \d+/i.test(message);
+}
+
+function looksLikeRagQuery(message) {
+  return /(wcag|material design|apple hig|nielsen|heuristic|refactoring ui|guideline)/i.test(message);
 }
 
 async function runDeterministicFallback({ message, sessionId, webSearchFn }) {
@@ -18,6 +23,16 @@ async function runDeterministicFallback({ message, sessionId, webSearchFn }) {
       route: "calculator",
       toolsUsed: ["calculator"],
       response: result.output,
+    };
+  }
+
+  if (looksLikeRagQuery(message)) {
+    const ragResult = await executeRagSearchTool({ input: message, sessionId });
+    return {
+      sessionId,
+      route: "rag_search",
+      toolsUsed: ["rag_search"],
+      response: ragResult.output,
     };
   }
 
@@ -48,9 +63,10 @@ async function getAgentExecutor({ sessionId, webSearchFn }) {
   const tools = [
     createCalculatorLangChainTool({ sessionId }),
     createWebSearchLangChainTool({ sessionId, webSearchFn }),
+    createRagLangChainTool({ sessionId }),
   ];
 
-  const prompt = `You are DesignMind phase-2 agent. Use calculator for arithmetic. Use web_search for current trends/examples. Keep final answers concise.`;
+  const prompt = `You are DesignMind phase-3 agent. Use calculator for arithmetic, web_search for current trends, and rag_search for design guideline questions from local docs. Keep final answers concise and include sources when rag_search is used.`;
   const agent = await createReactAgent({ llm: model, tools, prompt });
   cachedExecutor = new AgentExecutor({ agent, tools, verbose: false });
   return cachedExecutor;
@@ -70,7 +86,7 @@ export async function runAgent({ message, sessionId = "default", webSearchFn }) 
       result = {
         sessionId,
         route: "react_agent",
-        toolsUsed: ["calculator", "web_search"],
+        toolsUsed: ["calculator", "web_search", "rag_search"],
         response: typeof response.output === "string" ? response.output : JSON.stringify(response.output),
       };
     }

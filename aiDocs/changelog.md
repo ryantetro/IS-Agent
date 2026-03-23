@@ -12,6 +12,13 @@
 - Added server tests for calculator behavior and phase-2 routing verification
 - Added `scripts/verify-phase2.js` and integrated it into root test workflow
 - Verification evidence: `npm run test` passes with server unit tests and CLI phase-2 validation output
+- Implemented Phase 3 RAG slice with local persistent vector storage in `chroma_db/rag-store.json`
+- Added ingestion pipeline (`server/rag/ingestDocs.js`) that loads 5 curated design docs, chunks content, and stores retrievable records
+- Added `rag_search` tool with async retrieval and mandatory `Sources:` attribution block in every response
+- Wired `rag_search` into agent routing and ReAct tool registration
+- Added RAG-focused tests for chunk metadata and source-format guarantees
+- Added `scripts/verify-phase3.js` and integrated it into root test workflow to validate ingestion, retrieval, and persistence behavior
+- Verification evidence: `npm run test --prefix server`, `node scripts/verify-phase3.js`, and `npm run test` all pass
 
 ## Format
 For future entries include:
