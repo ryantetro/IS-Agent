@@ -1,0 +1,15 @@
+{
+  "name": "designmind-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js",
+    "build": "node -e \"console.log(JSON.stringify({script:'server:build',status:'placeholder'}))\"",
+    "test": "node -e \"console.log(JSON.stringify({script:'server:test',status:'placeholder'}))\""
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "designmind",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-first workspace for the DesignMind course project",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "build": "node scripts/build.js",
+    "run": "node scripts/run.js",
+    "test": "node scripts/test.js"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}
