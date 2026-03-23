@@ -32,6 +32,12 @@
 - Added multi-turn validation for same-session follow-up behavior and session memory unit coverage
 - Added `scripts/verify-phase5.js` and integrated it into root test workflow
 - Verification evidence: `npm run test --prefix server`, `node scripts/verify-phase5.js`, and `npm run test` all pass
+- Implemented Phase 6 React chat UI connected to `/api/chat` with message history and send flow
+- Added UI components for chat window, message list/input, tool indicators, source badges, and syntax-highlighted code blocks with copy support
+- Added client response parsing for source extraction and CSS snippet rendering modes
+- Added loading and error UI states for request handling
+- Added frontend verification script `scripts/verify-phase6.js` and integrated it into root test workflow
+- Verification evidence: `npm run test --prefix client`, `npm run build --prefix client`, `node scripts/verify-phase6.js`, and `npm run test` all pass
 
 ## Format
 For future entries include:

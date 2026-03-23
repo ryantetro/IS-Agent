@@ -1,0 +1,270 @@
+.app-shell {
+  min-height: 100vh;
+  background: #ebebed;
+  font-family: "SF Pro Text", "Segoe UI", sans-serif;
+  padding: 2rem;
+  color: #191919;
+}
+
+.app-card {
+  max-width: 1240px;
+  margin: 0 auto;
+  min-height: calc(100vh - 4rem);
+  background: #f6f6f7;
+  border-radius: 24px;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(20, 20, 35, 0.12);
+  border: 1px solid #e2e2e7;
+}
+
+.sidebar {
+  border-right: 1px solid #e6e6ea;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #f8f8f9;
+}
+
+.sidebar__search {
+  border: 1px solid #e2e2e7;
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  background: white;
+  font-size: 0.9rem;
+}
+
+.sidebar__new {
+  background: #0f0f13;
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sidebar nav button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: #383842;
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.sidebar nav button:hover {
+  background: #ececf0;
+}
+
+.chat-main {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-main__header {
+  border-bottom: 1px solid #e7e7eb;
+  padding: 0.25rem 0 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #72d1f7, #a886ff 48%, #ff98b7 90%);
+}
+
+.chat-main h1 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.hero {
+  text-align: center;
+  margin-top: 4.5rem;
+}
+
+.hero h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 650;
+}
+
+.hero p {
+  color: #5f6172;
+}
+
+.message-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  max-height: 55vh;
+  overflow: auto;
+  padding-right: 0.3rem;
+}
+
+.message {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.message--user {
+  justify-items: end;
+}
+
+.message__bubble {
+  max-width: min(100%, 740px);
+  background: white;
+  border: 1px solid #e4e4ea;
+  border-radius: 16px;
+  padding: 0.8rem 1rem;
+}
+
+.message--user .message__bubble {
+  background: #111217;
+  color: #ffffff;
+}
+
+.message__bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.tool-indicator {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.tool-chip {
+  font-size: 0.75rem;
+  border-radius: 999px;
+  background: #edf1ff;
+  color: #39457d;
+  padding: 0.2rem 0.55rem;
+}
+
+.sources {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.source-badge {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  background: #f1f7f3;
+  border: 1px solid #d6e8db;
+  color: #2d5f3b;
+}
+
+.composer {
+  background: white;
+  border: 1px solid #e4e4ea;
+  border-radius: 22px;
+  padding: 0.8rem;
+}
+
+.composer textarea {
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.98rem;
+  background: transparent;
+}
+
+.composer__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.composer__ghost {
+  border: 1px solid #e3e3e8;
+  background: white;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+}
+
+.composer__send {
+  border: 0;
+  background: #111217;
+  color: white;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+}
+
+.composer__send:disabled {
+  opacity: 0.65;
+}
+
+.code-block {
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.code-block__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  background: #f3f3f6;
+  border-bottom: 1px solid #e4e4ea;
+  font-size: 0.75rem;
+}
+
+.code-block__header button {
+  border: 1px solid #d8d8df;
+  border-radius: 999px;
+  background: white;
+  padding: 0.15rem 0.55rem;
+}
+
+.code-block__explain {
+  margin: 0;
+  padding: 0.55rem 0.75rem 0.75rem;
+  color: #4b4d5d;
+  font-size: 0.84rem;
+}
+
+.error-banner {
+  margin: 0;
+  color: #8a1f1f;
+  background: #fdeeee;
+  border: 1px solid #f2cccc;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    padding: 0.75rem;
+  }
+  .app-card {
+    grid-template-columns: 1fr;
+    border-radius: 14px;
+    min-height: calc(100vh - 1.5rem);
+  }
+  .sidebar {
+    display: none;
+  }
+}
