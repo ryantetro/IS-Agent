@@ -170,3 +170,28 @@ export async function runAgent({ message, sessionId = "default", webSearchFn, cs
     throw error;
   }
 }
+
+export async function streamAgentResponse({
+  message,
+  sessionId = "default",
+  webSearchFn,
+  cssSnippetFn,
+  onChunk,
+  chunkSize = 28,
+  chunkDelayMs = 16,
+}) {
+  const result = await runAgent({ message, sessionId, webSearchFn, cssSnippetFn });
+  const responseText = typeof result.response === "string" ? result.response : JSON.stringify(result.response);
+
+  for (let index = 0; index < responseText.length; index += chunkSize) {
+    const chunk = responseText.slice(index, index + chunkSize);
+    if (onChunk) {
+      await onChunk(chunk, index / chunkSize);
+    }
+    if (chunkDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, chunkDelayMs));
+    }
+  }
+
+  return { ...result, response: responseText };
+}

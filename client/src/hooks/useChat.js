@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { parseSources, stripSources, tryParseCssSnippet } from "../lib/responseParser.js";
+import { streamMessage } from "./useStream.js";
 
 function createSessionId() {
   return `ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -17,6 +18,17 @@ function mapAgentResponse(payload) {
     toolsUsed: Array.isArray(payload?.toolsUsed) ? payload.toolsUsed : [],
     sources,
     codeSnippet: cssSnippet,
+  };
+}
+
+function createAssistantPlaceholder() {
+  return {
+    id: crypto.randomUUID(),
+    role: "assistant",
+    text: "",
+    toolsUsed: [],
+    sources: [],
+    codeSnippet: null,
   };
 }
 
@@ -44,19 +56,45 @@ export function useChat() {
     setError("");
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, sessionId }),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.message || "Request failed");
-      }
+      const placeholder = createAssistantPlaceholder();
+      setMessages((prev) => [...prev, placeholder]);
 
-      setMessages((prev) => [...prev, mapAgentResponse(payload)]);
+      let streamedText = "";
+      await streamMessage({
+        message: text,
+        sessionId,
+        onChunk: (chunk) => {
+          streamedText += chunk;
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === placeholder.id ? { ...msg, text: streamedText } : msg))
+          );
+        },
+        onComplete: (result) => {
+          const mapped = mapAgentResponse(result);
+          setMessages((prev) => prev.map((msg) => (msg.id === placeholder.id ? mapped : msg)));
+        },
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected request error");
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, sessionId }),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload?.message || "Request failed");
+        }
+        setMessages((prev) => {
+          const withoutDraft = [...prev];
+          if (withoutDraft[withoutDraft.length - 1]?.role === "assistant") {
+            withoutDraft.pop();
+          }
+          return [...withoutDraft, mapAgentResponse(payload)];
+        });
+      } catch (fallbackError) {
+        setError(fallbackError instanceof Error ? fallbackError.message : "Unexpected request error");
+      }
     } finally {
       setIsLoading(false);
     }
