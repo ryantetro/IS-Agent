@@ -5,8 +5,15 @@ const router = Router();
 
 router.post("/", async (req, res) => {
   const { message = "", sessionId = "default" } = req.body || {};
-  const result = await runAgent({ message, sessionId });
-  res.json(result);
+  try {
+    const result = await runAgent({ message, sessionId });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: "agent_execution_failed",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 });
 
 export default router;
