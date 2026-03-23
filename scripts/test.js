@@ -5,6 +5,7 @@ async function main() {
   await run("npm", ["--prefix", "server", "run", "test"]);
   await run("node", ["scripts/verify-phase2.js"]);
   await run("node", ["scripts/verify-phase3.js"]);
+  await run("node", ["scripts/verify-phase4.js"]);
   await run("npm", ["--prefix", "client", "run", "test"]);
   printJson({ script: "test", status: "completed" });
 }

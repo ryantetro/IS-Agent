@@ -3,6 +3,7 @@ import { logger } from "../logger.js";
 import { executeCalculatorTool, createCalculatorLangChainTool } from "./tools/calculator.js";
 import { executeWebSearchTool, createWebSearchLangChainTool } from "./tools/webSearch.js";
 import { executeRagSearchTool, createRagLangChainTool } from "./tools/ragSearch.js";
+import { executeCssSnippetTool, createCssSnippetLangChainTool } from "./tools/cssSnippet.js";
 
 let cachedExecutor = null;
 
@@ -14,7 +15,11 @@ function looksLikeRagQuery(message) {
   return /(wcag|material design|apple hig|nielsen|heuristic|refactoring ui|guideline)/i.test(message);
 }
 
-async function runDeterministicFallback({ message, sessionId, webSearchFn }) {
+function looksLikeCssRequest(message) {
+  return /(tailwind|css|class(es)?|styles?|hover|button|card|layout|snippet)/i.test(message);
+}
+
+async function runDeterministicFallback({ message, sessionId, webSearchFn, cssSnippetFn }) {
   if (looksLikeMath(message)) {
     const expression = message.replace(/[^0-9+\-*/(). ]/g, "").trim() || message;
     const result = await executeCalculatorTool({ input: expression, sessionId });
@@ -33,6 +38,21 @@ async function runDeterministicFallback({ message, sessionId, webSearchFn }) {
       route: "rag_search",
       toolsUsed: ["rag_search"],
       response: ragResult.output,
+    };
+  }
+
+  if (looksLikeCssRequest(message)) {
+    const mode = /tailwind/i.test(message) ? "tailwind" : "css";
+    const cssResult = await executeCssSnippetTool({
+      input: { description: message, mode },
+      sessionId,
+      llmGenerate: cssSnippetFn,
+    });
+    return {
+      sessionId,
+      route: "css_snippet",
+      toolsUsed: ["css_snippet"],
+      response: cssResult.output,
     };
   }
 
@@ -64,29 +84,35 @@ async function getAgentExecutor({ sessionId, webSearchFn }) {
     createCalculatorLangChainTool({ sessionId }),
     createWebSearchLangChainTool({ sessionId, webSearchFn }),
     createRagLangChainTool({ sessionId }),
+    createCssSnippetLangChainTool({ sessionId }),
   ];
 
-  const prompt = `You are DesignMind phase-3 agent. Use calculator for arithmetic, web_search for current trends, and rag_search for design guideline questions from local docs. Keep final answers concise and include sources when rag_search is used.`;
+  const prompt = `You are DesignMind phase-4 agent.
+Use calculator for arithmetic.
+Use web_search for current trends and live web references.
+Use rag_search for local design-guideline questions.
+Use css_snippet only when the user asks for generated CSS or Tailwind code from a design description.
+Keep final answers concise and preserve structured tool outputs.`;
   const agent = await createReactAgent({ llm: model, tools, prompt });
   cachedExecutor = new AgentExecutor({ agent, tools, verbose: false });
   return cachedExecutor;
 }
 
-export async function runAgent({ message, sessionId = "default", webSearchFn }) {
+export async function runAgent({ message, sessionId = "default", webSearchFn, cssSnippetFn }) {
   const startedAt = Date.now();
   logger.info("agent_request_start", { sessionId, userMessage: message });
 
   try {
     let result;
     if (!process.env.OPENAI_API_KEY) {
-      result = await runDeterministicFallback({ message, sessionId, webSearchFn });
+      result = await runDeterministicFallback({ message, sessionId, webSearchFn, cssSnippetFn });
     } else {
       const executor = await getAgentExecutor({ sessionId, webSearchFn });
       const response = await executor.invoke({ input: message });
       result = {
         sessionId,
         route: "react_agent",
-        toolsUsed: ["calculator", "web_search", "rag_search"],
+        toolsUsed: ["calculator", "web_search", "rag_search", "css_snippet"],
         response: typeof response.output === "string" ? response.output : JSON.stringify(response.output),
       };
     }

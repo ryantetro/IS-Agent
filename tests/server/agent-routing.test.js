@@ -26,3 +26,19 @@ test("agent routes design trend queries to web search", async () => {
   assert.equal(result.toolsUsed[0], "web_search");
   assert.match(result.response, /Design Trends/);
 });
+
+test("agent routes styling prompts to css snippet tool", async () => {
+  const result = await runAgent({
+    message: "Generate tailwind classes for a card with soft shadow",
+    sessionId: "routing-test-3",
+    cssSnippetFn: async () => ({
+      mode: "tailwind",
+      code: "rounded-xl bg-white p-6 shadow-sm",
+      explanation: "Simple card style.",
+    }),
+  });
+
+  assert.equal(result.route, "css_snippet");
+  assert.equal(result.toolsUsed[0], "css_snippet");
+  assert.match(result.response, /tailwind/i);
+});
