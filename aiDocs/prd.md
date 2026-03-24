@@ -20,7 +20,7 @@ DesignMind solves this by acting as an always-available design consultant. It co
 
 ## 3. Agent Overview
 
-DesignMind is a ReAct-pattern agent built with LangChain.js. It reasons through design questions, selects the appropriate tool(s), and returns structured, actionable guidance with source attribution. It maintains conversation memory so follow-up questions work naturally.
+DesignMind is a LangChain.js agent that demonstrates ReAct-style tool use for ambiguous prompts and uses deterministic fast paths for obvious required-tool requests. It returns structured, actionable guidance with source attribution and maintains conversation memory so follow-up questions work naturally.
 
 ## 4. Tools
 
@@ -52,7 +52,7 @@ Core features:
 - Tool call indicators
 - Source attribution badges on RAG responses
 - Syntax-highlighted CSS blocks with copy support
-- Streaming responses (stretch)
+- Structured SSE streaming with tool lifecycle events and final response deltas
 
 ## 7. Structured Logging
 
@@ -71,7 +71,7 @@ Logs are written to `logs/` via structured logger.
 - All 4 tools functional and correctly routed
 - RAG answers always cite source documents
 - Memory supports follow-up context
-- Web UI conversation flow works end-to-end
+- Web UI conversation flow works end-to-end with structured metadata (`toolsUsed`, `sources`, `artifact`, `toolEvents`)
 - Structured logging captures tool calls and outcomes
 - Meaningful incremental git history
 

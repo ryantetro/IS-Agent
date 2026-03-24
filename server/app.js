@@ -1,15 +1,22 @@
 import express from "express";
-import chatRouter from "./routes/chat.js";
-import streamRouter from "./routes/stream.js";
+import { createChatRouter } from "./routes/chat.js";
+import { createStreamRouter } from "./routes/stream.js";
 
-const app = express();
-app.use(express.json());
+const HEALTH_BUILD_TAG = "server-app-debug-21b899-v3";
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "designmind-server" });
-});
+export function createApp({ runAgentImpl, streamAgentResponseImpl } = {}) {
+  const app = express();
+  app.use(express.json());
 
-app.use("/api/chat", chatRouter);
-app.use("/api/stream", streamRouter);
+  app.get("/health", (_req, res) => {
+    res.json({ ok: true, service: "designmind-server", buildTag: HEALTH_BUILD_TAG });
+  });
 
+  app.use("/api/chat", createChatRouter({ runAgentImpl }));
+  app.use("/api/stream", createStreamRouter({ streamAgentResponseImpl }));
+
+  return app;
+}
+
+const app = createApp();
 export default app;

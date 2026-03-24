@@ -2,8 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { streamAgentResponse } from "../../server/agent/index.js";
 
-test("streamAgentResponse emits progressive chunks and returns final result", async () => {
+test("streamAgentResponse forwards tool lifecycle events without fake deltas for tool routes", async () => {
   const chunks = [];
+  const events = [];
   const result = await streamAgentResponse({
     message: "Generate tailwind classes for a red CTA button",
     sessionId: "stream-test-1",
@@ -15,9 +16,14 @@ test("streamAgentResponse emits progressive chunks and returns final result", as
     onChunk: async (chunk) => {
       chunks.push(chunk);
     },
+    onEvent: async (event) => {
+      events.push(event.type);
+    },
   });
 
-  assert.ok(chunks.length > 1);
+  assert.equal(chunks.length, 0);
   assert.equal(typeof result.response, "string");
-  assert.equal(chunks.join(""), result.response);
+  assert.ok(events.includes("tool_start"));
+  assert.ok(events.includes("tool_end"));
+  assert.ok(!events.includes("delta"));
 });

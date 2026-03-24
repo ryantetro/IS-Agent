@@ -1,3 +1,4 @@
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { logger } from "../logger.js";
 
 const memoryStore = new Map();
@@ -32,6 +33,16 @@ export function getMemoryContext(sessionId, limit = 6) {
   const session = getSessionMemory(sessionId);
   const slice = session.slice(-limit);
   return slice.map((turn) => `${turn.role}: ${turn.content}`).join("\n");
+}
+
+export function getSessionMessages(sessionId, limit = 8) {
+  const session = getSessionMemory(sessionId);
+  return session.slice(-limit).map((turn) => {
+    if (turn.role === "assistant") {
+      return new AIMessage(turn.content);
+    }
+    return new HumanMessage(turn.content);
+  });
 }
 
 export function clearSessionMemory(sessionId) {

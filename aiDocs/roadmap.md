@@ -12,12 +12,12 @@ This tracked roadmap mirrors implementation status for reviewer visibility.
 - [x] Calculator tool implemented
 - [x] Tavily web search tool implemented
 - [x] ReAct wiring added
-- [x] Tool-call logging and route validation added
+- [x] Tool-call logging, structured tool events, and route validation added
 
 ## Phase 3 — RAG Tool
 - [x] 5 design docs curated and ingested
-- [x] Persistent local vector store path implemented
-- [x] RAG retrieval with source attribution implemented
+- [x] Persistent local embedding store path implemented
+- [x] RAG retrieval with structured source attribution implemented
 - [x] Persistence/retrieval verified
 
 ## Phase 4 — CSS Snippet Tool
@@ -31,12 +31,12 @@ This tracked roadmap mirrors implementation status for reviewer visibility.
 
 ## Phase 6 — Web UI (React Chat)
 - [x] React chat interface implemented
-- [x] `/api/chat` integration complete
+- [x] `/api/chat` structured payload integration complete
 - [x] Tool indicators, source badges, and code rendering added
 
 ## Phase 7 — Streaming (Stretch)
 - [x] SSE endpoint added (`/api/stream`)
-- [x] Progressive chunk rendering in UI implemented
+- [x] Structured stream events (`tool_start`, `tool_end`, `delta`, `complete`) implemented
 - [x] Completion/error flow handled
 
 ## Phase 8 — Artifact Renderer (Stretch)
@@ -48,4 +48,5 @@ This tracked roadmap mirrors implementation status for reviewer visibility.
 - [x] README expanded with setup, architecture, and verification flow
 - [x] Assignment requirement cross-check completed (except video recording)
 - [x] Repo hygiene checked (secrets/logs/vector DB ignored)
+- [x] Offline and live verification scripts split (`npm test`, `npm run test:live`)
 - [ ] Record and attach 2-minute demo video

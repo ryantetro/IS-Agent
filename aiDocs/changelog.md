@@ -1,6 +1,16 @@
 # Changelog — DesignMind
 
 ## 2026-03-23
+- Replaced the brittle live-path contract with a structured response shape: `text`, `toolsUsed`, `sources`, `artifact`, `toolEvents`, plus legacy `response`
+- Swapped the RAG storage layer from token-count JSON to a persistent local embedding index with offline fallback and automatic bootstrap
+- Added source-aware RAG answer synthesis, structured source objects, and compatibility `Sources:` blocks in final responses
+- Reworked CSS generation around structured output and artifact metadata so the UI no longer depends on scraping fenced JSON out of prose
+- Added direct tool fast paths for obvious calculator, RAG, CSS, and current-events search prompts to make the assignment-critical flows deterministic
+- Upgraded `/api/stream` to structured SSE events (`start`, `tool_start`, `tool_end`, `delta`, `complete`, `error`) and updated the client stream parser to use `fetch` + stream reading for `POST`
+- Added route-level contract tests, client payload-mapping tests, assignment smoke verification (`npm run verify:assignment`), and gated live-provider verification (`RUN_LIVE_AGENT_TESTS=1 npm run test:live`)
+- Forced offline mode in `npm test` via `DESIGNMIND_OFFLINE_TESTS=1` so local verification stays deterministic even if OpenAI/Tavily keys are present
+- Switched OpenAI path from text ReAct parsing to **`createToolCallingAgent`** (native tool calls) to fix `OUTPUT_PARSING_FAILURE` on greetings and informal model text; log route is `tool_calling_agent` with `toolsUsed` from actual steps
+- Fixed `AgentExecutor` cache key to include **`sessionId`** so tools are not stuck on the first session
 - Initialized professor-style AI-first repo structure
 - Moved project docs into `aiDocs/` and `ai/roadmaps/`
 - Added `.cursorrules` as local AI instruction file
@@ -57,6 +67,9 @@
 - Updated context references to tracked roadmap path for reviewer/AI orientation
 - Added final repo requirement verification script `scripts/verify-phase9.js` and integrated it into root test workflow
 - Verification evidence: `node scripts/verify-phase9.js` and `npm run test` pass
+- Hardened `scripts/dev.js` startup to reuse an already-running API on `API_PORT` (instead of crashing with `EADDRINUSE`) and always pass `VITE_API_PROXY` for consistent client proxy routing
+- Why: local dev sessions were frequently failing when an existing API server was already bound to `3001`
+- Verification evidence: `npm run dev` now reports `status:"reusing_api"` and starts client startup flow without API bind crash
 
 ## Format
 For future entries include:

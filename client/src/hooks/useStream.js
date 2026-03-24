@@ -1,34 +1,108 @@
-export function streamMessage({ message, sessionId, onStart, onChunk, onComplete, onFail }) {
-  return new Promise((resolve, reject) => {
-    const url = `/api/stream?message=${encodeURIComponent(message)}&sessionId=${encodeURIComponent(sessionId)}`;
-    const source = new EventSource(url);
+function parseEventBlock(block) {
+  const lines = block.split("\n");
+  const event = { name: "message", data: "" };
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      event.name = line.slice(6).trim();
+    }
+    if (line.startsWith("data:")) {
+      event.data += line.slice(5).trim();
+    }
+  }
+  return event;
+}
 
-    source.addEventListener("start", (event) => {
-      if (onStart) onStart(JSON.parse(event.data));
-    });
+async function readErrorMessage(response, fallback) {
+  let body = "";
 
-    source.addEventListener("chunk", (event) => {
-      const payload = JSON.parse(event.data);
-      if (onChunk) onChunk(payload.text || "");
-    });
+  try {
+    body = await response.text();
+  } catch {
+    return fallback;
+  }
 
-    source.addEventListener("complete", (event) => {
-      const payload = JSON.parse(event.data);
-      if (onComplete) onComplete(payload);
-      source.close();
-      resolve(payload);
-    });
+  if (!body) {
+    return fallback;
+  }
 
-    source.addEventListener("fail", (event) => {
-      const payload = JSON.parse(event.data);
-      if (onFail) onFail(payload);
-      source.close();
-      reject(new Error(payload.message || "stream failed"));
-    });
+  try {
+    const parsed = JSON.parse(body);
+    if (typeof parsed?.message === "string" && parsed.message.trim()) {
+      return parsed.message.trim();
+    }
+  } catch {
+    // Ignore non-JSON bodies and fall back to plain text below.
+  }
 
-    source.onerror = () => {
-      source.close();
-      reject(new Error("stream connection error"));
-    };
+  return body.replace(/\s+/g, " ").trim() || fallback;
+}
+
+export async function streamMessage({
+  message,
+  sessionId,
+  model,
+  toolsEnabled,
+  onStart,
+  onChunk,
+  onToolEvent,
+  onComplete,
+  onFail,
+}) {
+  const response = await fetch("/api/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      sessionId,
+      model,
+      toolsEnabled: toolsEnabled === false ? "false" : "true",
+    }),
   });
+
+  if (!response.ok || !response.body) {
+    const fallbackMessage =
+      response.status === 404
+        ? "Streaming endpoint unavailable (404). Your API server may be stale. Restart `npm run dev`."
+        : `Streaming request failed (${response.status}).`;
+    const detail = await readErrorMessage(response, fallbackMessage);
+    throw new Error(detail);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
+    const blocks = buffer.split("\n\n");
+    buffer = blocks.pop() || "";
+
+    for (const block of blocks) {
+      if (!block.trim()) continue;
+      const { name, data } = parseEventBlock(block);
+      const payload = data ? JSON.parse(data) : {};
+
+      if (name === "start" && onStart) onStart(payload);
+      if (name === "tool_start" || name === "tool_end") {
+        if (onToolEvent) onToolEvent(payload);
+      }
+      if (name === "delta" && onChunk) onChunk(payload.text || "");
+      if (name === "complete") {
+        if (onComplete) onComplete(payload);
+        return payload;
+      }
+      if (name === "error") {
+        if (onFail) onFail(payload);
+        throw new Error(payload.message || "stream failed");
+      }
+    }
+
+    if (done) {
+      break;
+    }
+  }
+
+  throw new Error("stream connection closed before completion");
 }

@@ -13,9 +13,9 @@ DesignMind is a multi-tool AI agent built with LangChain.js that acts as a profe
 ## Tech Stack
 - Frontend: React + Vite
 - Backend: Node.js + Express
-- Agent: LangChain.js ReAct pattern
+- Agent: LangChain.js ReAct-style conversational agent plus direct tool fast paths for obvious calculator/RAG/search/CSS prompts
 - Models: OpenAI chat + embeddings
-- Vector store: Chroma (persistent local)
+- Vector store: persisted local JSON embedding index
 - Search: Tavily
 - Logging: Winston
 
@@ -27,5 +27,5 @@ DesignMind is a multi-tool AI agent built with LangChain.js that acts as a profe
 - Never commit `.env`, `.testEnvVars`, `logs/`, or `chroma_db/`.
 
 ## Current Focus
-- Keep repo aligned with professor AI-first structure.
-- Implement roadmap phases incrementally, with test evidence and changelog updates.
+- Keep the structured server/client contract (`text`, `toolsUsed`, `sources`, `artifact`, `toolEvents`) aligned across routes, UI, and tests.
+- Preserve deterministic offline verification while keeping a separate live-provider verification path.

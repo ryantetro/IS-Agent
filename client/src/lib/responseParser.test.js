@@ -13,6 +13,13 @@ test("tryParseCssSnippet parses css snippet payload", () => {
   assert.match(parsed.code, /bg-blue-600/);
 });
 
+test("tryParseCssSnippet parses fenced json payload", () => {
+  const payload = "```json\n{\"mode\":\"tailwind\",\"code\":\"rounded-lg\",\"explanation\":\"Rounded.\"}\n```";
+  const parsed = tryParseCssSnippet(payload);
+  assert.equal(parsed.mode, "tailwind");
+  assert.match(parsed.code, /rounded-lg/);
+});
+
 test("parseSources extracts listed sources from response body", () => {
   const content = "Answer text\n\nSources:\n- WCAG (server/rag/docs/wcag.md)\n- Material Design";
   const sources = parseSources(content);

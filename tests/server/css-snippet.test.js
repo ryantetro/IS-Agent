@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatCssSnippetOutput, executeCssSnippetTool } from "../../server/agent/tools/cssSnippet.js";
+import {
+  executeCssSnippetTool,
+  formatCssSnippetOutput,
+  inferCssMode,
+} from "../../server/agent/tools/cssSnippet.js";
 
 test("formatCssSnippetOutput returns predictable structure", () => {
   const formatted = formatCssSnippetOutput({
@@ -32,4 +36,31 @@ test("executeCssSnippetTool supports tailwind mode", async () => {
   const parsed = JSON.parse(result.output);
   assert.equal(parsed.mode, "tailwind");
   assert.match(parsed.code, /bg-blue-600/);
+});
+
+test("inferCssMode chooses html for copy-pasteable component requests", () => {
+  assert.equal(
+    inferCssMode("Build me a simple pricing card component using HTML and Tailwind"),
+    "html"
+  );
+  assert.equal(inferCssMode("Generate tailwind classes for a pricing card"), "tailwind");
+});
+
+test("executeCssSnippetTool preserves request metadata for html components", async () => {
+  const result = await executeCssSnippetTool({
+    input: {
+      description: "Build a pricing card component using HTML and Tailwind",
+      mode: "html",
+    },
+    sessionId: "css-html-test",
+    llmGenerate: async () => ({
+      mode: "html",
+      code: '<section class="rounded-3xl bg-white p-8 shadow-xl"><h2>Pro</h2><p>$24/month</p></section>',
+      explanation: "Pricing card component.",
+    }),
+  });
+
+  assert.equal(result.artifact?.mode, "html");
+  assert.match(result.artifact?.code || "", /section/);
+  assert.match(result.artifact?.request || "", /pricing card component/i);
 });

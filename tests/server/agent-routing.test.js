@@ -42,3 +42,20 @@ test("agent routes styling prompts to css snippet tool", async () => {
   assert.equal(result.toolsUsed[0], "css_snippet");
   assert.match(result.response, /tailwind/i);
 });
+
+test("agent routes component prompts to html component generation", async () => {
+  const result = await runAgent({
+    message: "Build me a simple pricing card component using HTML and Tailwind",
+    sessionId: "routing-test-4",
+    cssSnippetFn: async () => ({
+      mode: "html",
+      code: '<section class="rounded-3xl bg-white p-8 shadow-xl"><h2>Pro</h2><p>$24/month</p></section>',
+      explanation: "Pricing card component.",
+    }),
+  });
+
+  assert.equal(result.route, "css_snippet");
+  assert.equal(result.toolsUsed[0], "css_snippet");
+  assert.equal(result.artifact?.mode, "html");
+  assert.match(result.artifact?.code || "", /section/);
+});

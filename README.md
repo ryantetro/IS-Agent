@@ -1,6 +1,6 @@
 # DesignMind
 
-DesignMind is a multi-tool LangChain.js ReAct agent with a React web UI for design support tasks.
+DesignMind is a multi-tool LangChain.js design assistant with a React web UI, structured tool metadata, and a source-aware RAG workflow.
 
 ## Assignment Deliverable Summary
 
@@ -9,7 +9,7 @@ DesignMind is a multi-tool LangChain.js ReAct agent with a React web UI for desi
 - RAG tool over 5+ real design docs with source attribution
 - Session-scoped conversation memory
 - React chat web UI (primary interaction path)
-- Streaming responses via SSE (stretch complete)
+- Streaming responses via SSE with structured `tool_start`, `tool_end`, `delta`, and `complete` events
 - Artifact rendering for color swatches and CSS preview (stretch complete)
 
 ## Repository Requirements Mapping
@@ -32,11 +32,16 @@ DesignMind is a multi-tool LangChain.js ReAct agent with a React web UI for desi
 
 ## Environment
 
-Copy `.env.example` to `.env` and set:
+Put secrets in **`.env`** and/or **`.env.local` at the repository root** (next to the root `package.json`). The API loads both files on startup (`server/loadEnv.js`); **`.env.local` overrides `.env`**.
 
-- `OPENAI_API_KEY`
-- `TAVILY_API_KEY`
-- `PORT` (optional, defaults in server)
+Set:
+
+- `OPENAI_API_KEY` — required for live grounded answering, CSS generation, and real-time agent/tool runs
+- `TAVILY_API_KEY` — required when the agent calls `web_search`
+- `RUN_LIVE_AGENT_TESTS=1` — optional, enables `npm run test:live`
+- `PORT` (optional, default `3001`)
+
+**Note:** `.env.local` is for local overrides (and is gitignored). It was not read by Node until `loadEnv.js` was added—only Vite reads it for the client by default.
 
 ## Run Locally
 
@@ -45,15 +50,21 @@ Install dependencies:
 - `npm install --prefix client`
 - `npm install --prefix server`
 
-Start backend:
+**Recommended — one command (API + Vite):**
 
-- `npm run run`
+- From the **repo root**: `npm run dev`  
+  This starts the Express API on port **3001**, waits for `/health`, then starts Vite. The client proxies `/api/*` to `http://127.0.0.1:3001` (IPv4 avoids common `AggregateError` / proxy failures with `localhost`).
 
-Start frontend (separate terminal):
+**Optional env (root `npm run dev`):**
 
-- `npm run dev`
+- `PORT` or `API_PORT` — API port (default `3001`). If you change it, set `VITE_API_PROXY` when starting Vite, e.g. `VITE_API_PROXY=http://127.0.0.1:4000 npm --prefix client run dev`.
 
-Frontend runs through Vite and proxies `/api/*` to the backend.
+**Two terminals instead:**
+
+- Terminal 1: `npm run run` (API only)
+- Terminal 2: `npm --prefix client run dev` (Vite only)
+
+If you run **only** `npm --prefix client run dev` without the API, Vite will log `http proxy error` for `/api/*` — start the server first.
 
 ## Verification Commands
 
@@ -61,6 +72,8 @@ Frontend runs through Vite and proxies `/api/*` to the backend.
 - Client tests: `npm run test --prefix client`
 - Build checks: `npm run build`
 - Full verification pipeline: `npm run test`
+- Assignment smoke test: `npm run verify:assignment`
+- Live provider verification: `RUN_LIVE_AGENT_TESTS=1 npm run test:live`
 
 Phase scripts (called by `npm run test`):
 
@@ -74,11 +87,14 @@ Phase scripts (called by `npm run test`):
 
 ## API Endpoints
 
-- `POST /api/chat`: non-stream chat response
-- `GET /api/stream`: SSE stream (`start`, `chunk`, `complete`, `fail`)
+- `POST /api/chat`: structured chat response with `text`, `toolsUsed`, `sources`, `artifact`, `toolEvents`, and legacy `response`
+- `POST /api/stream`: SSE stream with `start`, `tool_start`, `tool_end`, `delta`, `complete`, and `error`
+- `GET /api/stream`: compatibility alias for SSE consumers still using query params
 - `GET /health`: health check
 
 ## Notes
 
+- The RAG store is a persisted local JSON embedding index, not Chroma.
+- `npm run test` forces offline mode so local verification stays deterministic even if keys exist on the machine.
 - Demo video is intentionally not included in repo (submission artifact).
 - Temporary local source markdown copies at repo root are not required by runtime; canonical RAG corpus is in `server/rag/docs/`.

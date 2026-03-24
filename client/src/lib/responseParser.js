@@ -1,10 +1,16 @@
+function stripMarkdownFence(content) {
+  if (typeof content !== "string") return "";
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  return fenced ? fenced[1].trim() : content;
+}
+
 export function tryParseCssSnippet(content) {
   if (typeof content !== "string") return null;
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(stripMarkdownFence(content));
     if (
       parsed &&
-      (parsed.mode === "css" || parsed.mode === "tailwind") &&
+      (parsed.mode === "css" || parsed.mode === "tailwind" || parsed.mode === "html") &&
       typeof parsed.code === "string"
     ) {
       return {
@@ -26,7 +32,7 @@ function isHex(value) {
 export function tryParseColorPalette(content) {
   if (typeof content !== "string") return null;
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(stripMarkdownFence(content));
     if (!parsed || parsed.type !== "color_palette" || !Array.isArray(parsed.colors)) {
       return null;
     }
