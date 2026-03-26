@@ -1,5 +1,16 @@
 # Changelog — DesignMind
 
+## 2026-03-25
+- Backfilled reviewer-visible process artifacts: `aiDocs/plan.md`, `aiDocs/process-log.md`, `aiDocs/evidence-map.md`, and detailed roadmap docs under `ai/roadmaps/`
+- Turned `ai/roadmaps/` into a tracked exception inside otherwise ignored `ai/` so phase and commit roadmaps can live in git
+- Replaced the stale local roadmap with a master index that links to one roadmap per implementation phase and one roadmap per meaningful commit
+- Added `.mcp.example.json` and `aiDocs/mcp-setup.md` so MCP expectations are documented with a concrete project-local example
+- Upgraded `server/logger.js` to append structured NDJSON logs into `logs/*.ndjson` while keeping JSON stdout output
+- Expanded final request logs to include `userMessage`, `toolCalls`, `finalResponse`, and `totalDurationMs` so the log schema matches the PRD
+- Added `scripts/debug-agent.js`, `scripts/verify-logs.js`, and `scripts/verify-process-docs.js`
+- Removed the accidentally committed `.cursor` debug log and added ignore coverage for future editor debug logs
+- Verification evidence: `npm run verify:logs`, `npm run verify:process`, and `npm run test`
+
 ## 2026-03-23
 - Replaced the brittle live-path contract with a structured response shape: `text`, `toolsUsed`, `sources`, `artifact`, `toolEvents`, plus legacy `response`
 - Swapped the RAG storage layer from token-count JSON to a persistent local embedding index with offline fallback and automatic bootstrap

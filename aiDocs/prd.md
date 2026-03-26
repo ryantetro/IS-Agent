@@ -64,7 +64,7 @@ Every agent run should log:
 - finalResponse
 - totalDurationMs
 
-Logs are written to `logs/` via structured logger.
+Logs are emitted as structured JSON to stdout and appended to `logs/*.ndjson` via the shared logger.
 
 ## 8. Success Criteria
 

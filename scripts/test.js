@@ -13,6 +13,8 @@ async function main() {
   await run("node", ["scripts/verify-phase8.js"], { env: offlineEnv });
   await run("node", ["scripts/verify-phase9.js"], { env: offlineEnv });
   await run("node", ["scripts/verify-assignment.js"], { env: offlineEnv });
+  await run("node", ["scripts/verify-logs.js"], { env: offlineEnv });
+  await run("node", ["scripts/verify-process-docs.js"], { env: offlineEnv });
   await run("npm", ["--prefix", "client", "run", "test"], { env: offlineEnv });
   printJson({ script: "test", status: "completed" });
 }

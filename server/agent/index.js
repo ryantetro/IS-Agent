@@ -184,7 +184,27 @@ function coerceContentToText(content) {
   return JSON.stringify(content);
 }
 
+function summarizeToolCalls(toolEvents = [], sources = []) {
+  const calls = toolEvents
+    .filter((event) => event?.type === "tool_end")
+    .map((event) => ({
+      tool: event.tool,
+      input: event.input,
+      output: event.outputPreview || "",
+      durationMs: event.durationMs ?? null,
+    }));
+
+  if (calls.length === 1 && sources.length) {
+    calls[0].sources = sources;
+  } else if (calls.length > 1 && sources.length) {
+    calls[calls.length - 1].sources = sources;
+  }
+
+  return calls;
+}
+
 function persistAgentResult({ sessionId, message, result, startedAt }) {
+  const totalDurationMs = Date.now() - startedAt;
   appendSessionTurn(sessionId, { role: "user", content: message });
   appendSessionTurn(sessionId, {
     role: "assistant",
@@ -193,11 +213,15 @@ function persistAgentResult({ sessionId, message, result, startedAt }) {
 
   logger.info("agent_request_end", {
     sessionId,
+    userMessage: message,
     route: result.route,
     toolsUsed: result.toolsUsed,
-    sources: result.sources.length,
+    toolCalls: summarizeToolCalls(result.toolEvents, result.sources),
+    sources: result.sources,
     artifactType: result.artifact?.type || null,
-    durationMs: Date.now() - startedAt,
+    finalResponse: result.response || result.text || result.artifact?.explanation || "",
+    totalDurationMs,
+    durationMs: totalDurationMs,
   });
 }
 
@@ -674,11 +698,13 @@ export async function runAgent({
     });
     return result;
   } catch (error) {
+    const totalDurationMs = Date.now() - startedAt;
     logger.error("agent_request_error", {
       sessionId: safeSessionId,
       userMessage: message,
       error: error instanceof Error ? error.message : String(error),
-      durationMs: Date.now() - startedAt,
+      totalDurationMs,
+      durationMs: totalDurationMs,
     });
     throw error;
   }
@@ -730,11 +756,13 @@ export async function streamAgentResponse({
       });
       return result;
     } catch (error) {
+      const totalDurationMs = Date.now() - startedAt;
       logger.error("agent_request_error", {
         sessionId: safeSessionId,
         userMessage: message,
         error: error instanceof Error ? error.message : String(error),
-        durationMs: Date.now() - startedAt,
+        totalDurationMs,
+        durationMs: totalDurationMs,
       });
       throw error;
     }

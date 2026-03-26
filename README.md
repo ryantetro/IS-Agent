@@ -1,6 +1,6 @@
 # DesignMind
 
-DesignMind is a multi-tool LangChain.js design assistant with a React web UI, structured tool metadata, and a source-aware RAG workflow.
+DesignMind is a multi-tool LangChain.js design assistant with a React web UI, structured tool metadata, a source-aware RAG workflow, and reviewer-visible process artifacts for PRD-driven development.
 
 ## Assignment Deliverable Summary
 
@@ -10,25 +10,42 @@ DesignMind is a multi-tool LangChain.js design assistant with a React web UI, st
 - Session-scoped conversation memory
 - React chat web UI (primary interaction path)
 - Streaming responses via SSE with structured `tool_start`, `tool_end`, `delta`, and `complete` events
-- Artifact rendering for color swatches and CSS preview (stretch complete)
+- Artifact rendering for color swatches and CSS preview
+- Structured JSON logging to stdout and `logs/*.ndjson`
 
 ## Repository Requirements Mapping
 
 - `context.md`: `aiDocs/context.md`
 - PRD: `aiDocs/prd.md`
-- Roadmap (tracked): `aiDocs/roadmap.md`
-- `.gitignore`: root `.gitignore` excludes secrets/artifacts
-- Structured logging: `server/logger.js` + tool/agent/stream logs
-- Incremental history: setup -> tools -> RAG -> CSS -> memory -> UI -> streaming (7+ commits)
+- Plan: `aiDocs/plan.md`
+- High-level roadmap: `aiDocs/roadmap.md`
+- Detailed phase + commit roadmaps: `ai/roadmaps/`
+- Process log: `aiDocs/process-log.md`
+- Evidence map: `aiDocs/evidence-map.md`
+- MCP setup example: `.mcp.example.json` + `aiDocs/mcp-setup.md`
+- Structured logging: `server/logger.js`
+- Incremental history: setup -> tools -> RAG -> CSS -> memory -> UI -> streaming -> docs/process alignment
 
 ## Project Structure
 
 - `client/`: React + Vite web app
 - `server/`: Express API + agent/tool modules
 - `server/rag/docs/`: source documents for ingestion
-- `scripts/`: cross-platform verification and workflow scripts
-- `aiDocs/`: tracked project context, requirements, roadmap, architecture, changelog
+- `scripts/`: cross-platform verification, debug, and workflow scripts
+- `aiDocs/`: canonical tracked requirements, plan, process, architecture, and evidence docs
+- `ai/roadmaps/`: tracked detailed phase-by-phase and commit-by-commit implementation archive
 - `tests/`: server and parser-level tests
+- `logs/`: ignored structured runtime/debug logs (`*.ndjson`)
+
+## Process Evidence
+
+The repo is organized around a document-driven pipeline:
+
+1. `aiDocs/prd.md` defines the product and grading-critical requirements.
+2. `aiDocs/plan.md` translates the PRD into an implementation strategy.
+3. `aiDocs/roadmap.md` tracks the shipped phases at a reviewer-friendly level.
+4. `ai/roadmaps/` contains detailed backfilled artifacts for each phase and each meaningful commit.
+5. `aiDocs/process-log.md` and `aiDocs/evidence-map.md` show how the work evolved across sessions and where to verify it.
 
 ## Environment
 
@@ -39,9 +56,8 @@ Set:
 - `OPENAI_API_KEY` — required for live grounded answering, CSS generation, and real-time agent/tool runs
 - `TAVILY_API_KEY` — required when the agent calls `web_search`
 - `RUN_LIVE_AGENT_TESTS=1` — optional, enables `npm run test:live`
-- `PORT` (optional, default `3001`)
-
-**Note:** `.env.local` is for local overrides (and is gitignored). It was not read by Node until `loadEnv.js` was added—only Vite reads it for the client by default.
+- `PORT` — optional API port override (default `3001`)
+- `DESIGNMIND_LOG_FILE` — optional override for the NDJSON log output path
 
 ## Run Locally
 
@@ -50,21 +66,21 @@ Install dependencies:
 - `npm install --prefix client`
 - `npm install --prefix server`
 
-**Recommended — one command (API + Vite):**
+Recommended:
 
-- From the **repo root**: `npm run dev`  
-  This starts the Express API on port **3001**, waits for `/health`, then starts Vite. The client proxies `/api/*` to `http://127.0.0.1:3001` (IPv4 avoids common `AggregateError` / proxy failures with `localhost`).
+- From the repo root: `npm run dev`
 
-**Optional env (root `npm run dev`):**
+This starts the Express API on port `3001`, waits for `/health`, then starts Vite. The client proxies `/api/*` to `http://127.0.0.1:3001`.
 
-- `PORT` or `API_PORT` — API port (default `3001`). If you change it, set `VITE_API_PROXY` when starting Vite, e.g. `VITE_API_PROXY=http://127.0.0.1:4000 npm --prefix client run dev`.
+Optional env:
 
-**Two terminals instead:**
+- `PORT` or `API_PORT` — API port override
+- `VITE_API_PROXY` — client proxy target if you run Vite separately
 
-- Terminal 1: `npm run run` (API only)
-- Terminal 2: `npm --prefix client run dev` (Vite only)
+Two-terminal option:
 
-If you run **only** `npm --prefix client run dev` without the API, Vite will log `http proxy error` for `/api/*` — start the server first.
+- Terminal 1: `npm run run`
+- Terminal 2: `npm --prefix client run dev`
 
 ## Verification Commands
 
@@ -73,9 +89,12 @@ If you run **only** `npm --prefix client run dev` without the API, Vite will log
 - Build checks: `npm run build`
 - Full verification pipeline: `npm run test`
 - Assignment smoke test: `npm run verify:assignment`
+- Process artifact verification: `npm run verify:process`
+- Structured log verification: `npm run verify:logs`
+- Deterministic debug replay: `npm run debug:agent`
 - Live provider verification: `RUN_LIVE_AGENT_TESTS=1 npm run test:live`
 
-Phase scripts (called by `npm run test`):
+Phase scripts called by `npm run test`:
 
 - `scripts/verify-phase2.js`
 - `scripts/verify-phase3.js`
@@ -84,6 +103,9 @@ Phase scripts (called by `npm run test`):
 - `scripts/verify-phase6.js`
 - `scripts/verify-phase7.js`
 - `scripts/verify-phase8.js`
+- `scripts/verify-phase9.js`
+- `scripts/verify-logs.js`
+- `scripts/verify-process-docs.js`
 
 ## API Endpoints
 
@@ -95,6 +117,6 @@ Phase scripts (called by `npm run test`):
 ## Notes
 
 - The RAG store is a persisted local JSON embedding index, not Chroma.
+- Structured logs are emitted to stdout and appended to `logs/*.ndjson`.
 - `npm run test` forces offline mode so local verification stays deterministic even if keys exist on the machine.
-- Demo video is intentionally not included in repo (submission artifact).
-- Temporary local source markdown copies at repo root are not required by runtime; canonical RAG corpus is in `server/rag/docs/`.
+- Demo video is intentionally not included in repo because it is a submission artifact rather than runtime code.

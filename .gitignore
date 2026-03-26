@@ -9,12 +9,17 @@ out/
 .env.local
 .testEnvVars
 
-ai/
+ai/*
+!ai/roadmaps/
+ai/roadmaps/*
+!ai/roadmaps/*.md
 .cursorrules
 claude.md
 
 logs/
 chroma_db/
+
+.cursor/debug-*.log
 
 .DS_Store
 .vscode/

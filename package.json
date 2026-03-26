@@ -9,7 +9,10 @@
     "run": "node scripts/run.js",
     "test": "node scripts/test.js",
     "test:live": "node scripts/test-live.js",
-    "verify:assignment": "node scripts/verify-assignment.js"
+    "verify:assignment": "node scripts/verify-assignment.js",
+    "verify:process": "node scripts/verify-process-docs.js",
+    "verify:logs": "node scripts/verify-logs.js",
+    "debug:agent": "node scripts/debug-agent.js"
   },
   "workspaces": [
     "client",

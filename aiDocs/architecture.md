@@ -4,18 +4,18 @@
 DesignMind is a full-stack AI design consultant application with:
 - React + Vite frontend
 - Express backend
-- LangChain.js conversational ReAct path with direct tool fast paths for obvious required-tool prompts
+- LangChain.js conversational agent flow with direct tool fast paths for obvious required-tool prompts
 - OpenAI for chat completions and embeddings
 - Tavily for web search
 - Persistent local JSON embedding store for RAG
-- Winston for structured logging
+- Shared JSON logger that writes to stdout and `logs/*.ndjson`
 
 ## High-Level Flow
 1. User sends a message from the React chat UI.
 2. Frontend calls backend `POST /api/chat` or `POST /api/stream`.
 3. Backend creates or resumes a session-aware agent run.
 4. Backend either fast-paths an obvious tool request or uses the LangChain agent for conversational tool selection.
-5. Tool calls emit structured lifecycle events and are logged with structured metadata.
+5. Tool calls emit structured lifecycle events and structured logs.
 6. Agent returns a structured payload: `text`, `toolsUsed`, `sources`, `artifact`, `toolEvents`, and legacy `response`.
 7. Frontend renders text, source attributions, tool chips, code blocks, or artifacts.
 
@@ -24,9 +24,9 @@ DesignMind is a full-stack AI design consultant application with:
 - `server/app.js` — Express app configuration
 - `server/routes/chat.js` — standard chat endpoint
 - `server/routes/stream.js` — SSE endpoint with `tool_start`, `tool_end`, `delta`, and `complete`
-- `server/agent/index.js` — agent orchestration, tool event capture, and response shaping
-- `server/agent/memory.js` — memory/session handling
-- `server/agent/tools/*.js` — tool definitions
+- `server/agent/index.js` — agent orchestration, tool event capture, response shaping, and final request logging
+- `server/agent/memory.js` — session memory handling
+- `server/agent/tools/*.js` — calculator, web search, RAG, and CSS tool definitions
 - `server/rag/ingestDocs.js` — chunk/embed/store design docs
 - `server/rag/vectorStore.js` — JSON embedding store bootstrap and similarity search
 - `server/logger.js` — shared structured logger
@@ -39,8 +39,8 @@ DesignMind is a full-stack AI design consultant application with:
 - `client/src/components/ToolIndicator.jsx`
 - `client/src/components/SourceBadge.jsx`
 - `client/src/components/CodeBlock.jsx`
-- `client/src/components/ColorSwatchRenderer.jsx` (stretch)
-- `client/src/components/CSSPreviewPanel.jsx` (stretch)
+- `client/src/components/ColorSwatchRenderer.jsx`
+- `client/src/components/CSSPreviewPanel.jsx`
 - `client/src/hooks/useChat.js`
 - `client/src/hooks/useStream.js`
 - `client/src/lib/chatPayload.js`
@@ -48,22 +48,22 @@ DesignMind is a full-stack AI design consultant application with:
 ## Memory Strategy
 - Session-scoped memory
 - In-memory storage keyed by `sessionId` for MVP
-- Prior turns are fed back into the agent/UI contract as structured history
+- Prior turns are fed back into the agent/tool routing flow as structured history
 
 ## RAG Strategy
-- Ingest 5–7 curated design docs
+- Ingest 5 curated design docs under `server/rag/docs/`
 - Chunk with source metadata
-- Store embeddings in a persistent local JSON index
-- Return structured sources and append a legacy `Sources:` block for compatibility
+- Store embeddings in a persistent local JSON index under `chroma_db/rag-store.json`
+- Return structured sources and append a compatibility `Sources:` block when needed
 
 ## Logging Strategy
-Log:
-- request start/end
-- tool call input/output and lifecycle events
-- source attribution for RAG
-- duration
-- errors
-- `sessionId` correlation
+Each run emits:
+- `agent_request_start` with `sessionId`, `userMessage`, selected model, and runtime tag
+- tool-level invocation/result/error entries
+- stream start/complete/error events when SSE is used
+- `agent_request_end` with `toolCalls`, `finalResponse`, `sources`, and `totalDurationMs`
+
+Logs are emitted as newline-delimited JSON to stdout and appended to `logs/*.ndjson`.
 
 ## CLI Strategy
 Provide Node scripts for:
@@ -71,6 +71,9 @@ Provide Node scripts for:
 - run
 - test
 - dev
+- verify process artifacts
+- verify structured logs
+- deterministic debug replay
 
 Scripts must be AI-readable:
 - JSON stdout
