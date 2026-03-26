@@ -2,7 +2,8 @@
 
 ## 2026-03-25
 - Added `client/vercel.json` for Vercel projects whose **Root Directory** is `client/` (Vercel loads config from that folder, not the repo root)
-- Added root `vercel.json` for npm-workspace Vite deploys: **`npm ci` at repo root** (uses root `package-lock.json`), **`npm run build -w designmind-client`**, publish `client/dist` — avoids `npm --prefix client ci` failing on Vercel when it cannot see `client/package-lock.json`
+- Added root `vercel.json` for npm-workspace Vite deploys: **`npm install` at repo root** (works around npm `ci` + Rollup optional native deps on Linux), **`npm run build -w designmind-client`**, publish `client/dist`
+- Set `engines.node` to **`20.x`** on the **repo root** and **`client`** package so Vercel uses Node 20 instead of defaulting to Node 24 (Rollup optional native deps failed on the Vercel Linux image)
 - Added `VITE_API_BASE_URL` via `client/src/lib/apiPath.js` so the static UI can reach a separately hosted Express API; optional `CORS_ORIGIN` on the server enables cross-origin browser calls
 - Backfilled reviewer-visible process artifacts: `aiDocs/plan.md`, `aiDocs/process-log.md`, `aiDocs/evidence-map.md`, and detailed roadmap docs under `ai/roadmaps/`
 - Turned `ai/roadmaps/` into a tracked exception inside otherwise ignored `ai/` so phase and commit roadmaps can live in git
