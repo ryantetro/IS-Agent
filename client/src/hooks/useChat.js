@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { applyToolEventToDraft, mapAgentPayload } from "../lib/chatPayload.js";
+import { apiPath } from "../lib/apiPath.js";
 import { streamMessage } from "./useStream.js";
 
 function createSessionId() {
@@ -131,7 +132,7 @@ export function useChat() {
         );
 
         try {
-          const response = await fetch("/api/chat", {
+          const response = await fetch(apiPath("/api/chat"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message: text, sessionId, model, toolsEnabled }),

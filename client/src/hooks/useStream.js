@@ -1,3 +1,5 @@
+import { apiPath } from "../lib/apiPath.js";
+
 function parseEventBlock(block) {
   const lines = block.split("\n");
   const event = { name: "message", data: "" };
@@ -48,7 +50,7 @@ export async function streamMessage({
   onComplete,
   onFail,
 }) {
-  const response = await fetch("/api/stream", {
+  const response = await fetch(apiPath("/api/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
