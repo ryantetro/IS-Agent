@@ -82,6 +82,23 @@ Two-terminal option:
 - Terminal 1: `npm run run`
 - Terminal 2: `npm --prefix client run dev`
 
+## Deploy (Vercel)
+
+This UI is a **static Vite build**. The API must be hosted separately; set **`VITE_API_BASE_URL`** on Vercel (see `.env.example`) so the browser can reach your Express server, and **`CORS_ORIGIN`** on the API to your `*.vercel.app` URL.
+
+**Recommended (single config):** In the Vercel project, leave **Root Directory** empty (repository root). Vercel reads `/vercel.json`:
+
+- Install: `npm install --no-audit --no-fund`
+- Build: `npm run build -w designmind-client`
+- Output: `client/dist`
+
+**Alternative:** Set Vercel **Root Directory** to `client/`. Then Vercel reads `client/vercel.json` and you must install from the monorepo root (`cd .. && npm install …`) so Rollup’s Linux optional binary resolves; do not override the install command in the dashboard.
+
+Local checks:
+
+- `npm run verify:vercel` — validates config files and runs the same client build Vercel uses (repo-root layout)
+- `npm run verify:vercel:clean-room` — deletes `node_modules`, reinstalls, and proves **both** Vercel root layouts; run before a release if you changed dependencies (requires network)
+
 ## Verification Commands
 
 - Server tests: `npm run test --prefix server`
@@ -91,6 +108,7 @@ Two-terminal option:
 - Assignment smoke test: `npm run verify:assignment`
 - Process artifact verification: `npm run verify:process`
 - Structured log verification: `npm run verify:logs`
+- Vercel build/config sanity: `npm run verify:vercel` (use `npm run verify:vercel:clean-room` for a full reinstall proof)
 - Deterministic debug replay: `npm run debug:agent`
 - Live provider verification: `RUN_LIVE_AGENT_TESTS=1 npm run test:live`
 

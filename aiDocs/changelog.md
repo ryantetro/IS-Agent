@@ -1,9 +1,14 @@
 # Changelog — DesignMind
 
 ## 2026-03-25
+- Added `scripts/verify-vercel-build.js` with `npm run verify:vercel` and `npm run verify:vercel:clean-room` to validate `vercel.json` / `client/vercel.json` and reproduce both install layouts (optional clean-room reinstall)
+- Documented Vercel **Root Directory** choices and env vars in `README.md` under **Deploy (Vercel)**
+- Tweaked Vercel install commands to `npm install --no-audit --no-fund` for quieter, predictable CI installs
 - Added `client/vercel.json` for Vercel projects whose **Root Directory** is `client/` (Vercel loads config from that folder, not the repo root)
 - Added root `vercel.json` for npm-workspace Vite deploys: **`npm install` at repo root** (works around npm `ci` + Rollup optional native deps on Linux), **`npm run build -w designmind-client`**, publish `client/dist`
 - Set `engines.node` to **`20.x`** on the **repo root** and **`client`** package so Vercel uses Node 20 instead of defaulting to Node 24 (Rollup optional native deps failed on the Vercel Linux image)
+- Vercel **Root Directory = `client`**: use **`cd .. && npm install`** so deps install from the workspace root (fixes Rollup `@rollup/rollup-linux-x64-gnu` missing when installing only inside `client/`)
+- Added **`@rollup/rollup-linux-x64-gnu`** as an **`optionalDependency`** on `client` so Linux CI gets the native binary while macOS skips it cleanly
 - Added `VITE_API_BASE_URL` via `client/src/lib/apiPath.js` so the static UI can reach a separately hosted Express API; optional `CORS_ORIGIN` on the server enables cross-origin browser calls
 - Backfilled reviewer-visible process artifacts: `aiDocs/plan.md`, `aiDocs/process-log.md`, `aiDocs/evidence-map.md`, and detailed roadmap docs under `ai/roadmaps/`
 - Turned `ai/roadmaps/` into a tracked exception inside otherwise ignored `ai/` so phase and commit roadmaps can live in git
